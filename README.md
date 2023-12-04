@@ -20,7 +20,7 @@ This PHP-based web spider is designed to systematically crawl websites, extract 
   - **Advanced Search Features:** Extend search module with advanced features.
 
 ## Usage
-1. Clone the repository: `git clone https://github.com/yourusername/web-spider.git`
+1. Clone the repository: `git clone https://github.com/Me-AU/web-crawler.git`
 2. Navigate to the project directory: `cd web-spider`
 3. Open `index.html` in a web browser and enter the seed URL.
 4. Click "Start Crawling" to initiate the spider.
