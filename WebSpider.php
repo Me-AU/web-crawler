@@ -147,18 +147,22 @@ class WebSpider {
 
 
     private function enqueueLinks($htmlContent) {
-        // TODO: Implement URL extraction and add to the URL queue
-        // use regular expressions or a dedicated HTML parser
-        $pattern = '/<a\s[^>]*?href=(["\'])(.*?)\1/';
-        preg_match_all($pattern, $htmlContent, $matches);
+    // Use DOMDocument for more robust HTML parsing
+    $dom = new DOMDocument;
+    @$dom->loadHTML($htmlContent);
 
-        foreach ($matches[2] as $link) {
-            $absoluteUrl = $this->makeAbsoluteUrl($link);
-            if ($absoluteUrl && !in_array($absoluteUrl, $this->visitedUrls) && !in_array($absoluteUrl, $this->urlQueue)) {
-                $this->urlQueue[] = $absoluteUrl;
-            }
+    // Find all anchor (a) tags
+    $anchorNodes = $dom->getElementsByTagName('a');
+
+    foreach ($anchorNodes as $anchorNode) {
+        $link = $anchorNode->getAttribute('href');
+        $absoluteUrl = $this->makeAbsoluteUrl($link);
+
+        if ($absoluteUrl && !in_array($absoluteUrl, $this->visitedUrls) && !in_array($absoluteUrl, $this->urlQueue)) {
+            $this->urlQueue[] = $absoluteUrl;
         }
     }
+}
 
     private function makeAbsoluteUrl($url) {
         // Convert relative URLs to absolute URLs
