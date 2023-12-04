@@ -89,9 +89,32 @@ class WebSpider {
     
 
     private function fetchPageContent($url) {
-        // TODO: Implement HTTP request to fetch the HTML content
-        // use cURL or other HTTP libraries for this
-        $htmlContent = file_get_contents($url);
+        // Initialize cURL session
+        $curl = curl_init();
+    
+        // Set cURL options
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); // Follow redirects
+    
+        // can add more cURL options here, such as setting headers, timeouts, etc.
+    
+        // Execute cURL session
+        $htmlContent = curl_exec($curl);
+    
+        // Check for cURL errors
+        if (curl_errno($curl)) {
+            // Handle cURL errors
+            // Log the error or perform additional error handling as needed
+            error_log("cURL Error: " . curl_error($curl));
+    
+            // Return false to indicate failure
+            return false;
+        }
+    
+        // Close cURL session
+        curl_close($curl);
+    
         return $htmlContent;
     }
 
