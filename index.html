@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Spider UI</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        input {
+            padding: 5px;
+            width: 200px;
+        }
+
+        button {
+            padding: 7px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Web Spider</h1>
+    <form id="spiderForm">
+        <label for="seedUrl">Seed URL:</label>
+        <input type="text" id="seedUrl" name="seedUrl" required>
+        <button type="button" onclick="startCrawling()">Start Crawling</button>
+    </form>
+
+    <script>
+        function startCrawling() {
+            var seedUrl = document.getElementById("seedUrl").value;
+
+            // Send the seed URL to the PHP file using AJAX
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "crawl.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    alert("Crawling complete. Check the server logs for details.");
+                }
+            };
+            xhr.send("seedUrl=" + encodeURIComponent(seedUrl));
+        }
+    </script>
+</body>
+</html>
