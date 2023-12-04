@@ -11,17 +11,40 @@ class WebSpider {
     }
 
     public function crawl() {
-        while (!empty($this->urlQueue)) {
+    $mh = curl_multi_init();
+    $handles = [];
+
+    while (!empty($this->urlQueue)) {
+        // Limit the number of simultaneous requests (adjust as needed)
+        while (count($handles) < $this->concurrencyLimit && !empty($this->urlQueue)) {
             $currentUrl = array_shift($this->urlQueue);
 
             if (!$this->canVisitUrl($currentUrl)) {
                 continue;
             }
 
-            $htmlContent = $this->fetchPageContent($currentUrl);
-            $data = $this->processPageContent($currentUrl, $htmlContent);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $currentUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-            $this->visitedUrls[] = $currentUrl;
+            // Add more cURL options as needed
+
+            curl_multi_add_handle($mh, $ch);
+            $handles[$currentUrl] = $ch;
+        }
+
+        // Execute the multi-cURL requests
+        $running = null;
+        do {
+            curl_multi_exec($mh, $running);
+            curl_multi_select($mh);
+        } while ($running > 0);
+
+        // Process the completed requests
+        foreach ($handles as $url => $ch) {
+            $htmlContent = curl_multi_getcontent($ch);
+            $data = $this->processPageContent($url, $htmlContent);
+            $this->visitedUrls[] = $url;
 
             if ($this->depthLimit > 0) {
                 $this->enqueueLinks($htmlContent);
@@ -29,17 +52,27 @@ class WebSpider {
 
             $this->depthLimit--;
 
-            // TODO: implement concurrency here for improved performance
-            // use multi-curl or asynchronous requests
-            sleep(1); // Respectful crawling delay
-
             // Store the extracted data
             $this->extractedData[] = $data;
+
+            // Remove the handle
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+
+            unset($handles[$url]);
         }
 
-        // Return the extracted data
-        return $this->extractedData;
+        // Respectful crawling delay
+        usleep(1000000); // 1 second delay
     }
+
+    // Close the multi-cURL handle
+    curl_multi_close($mh);
+
+    // Return the extracted data
+    return $this->extractedData;
+}
+
 
     private function canVisitUrl($url) {
         $parsedUrl = parse_url($url);
