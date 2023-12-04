@@ -119,20 +119,32 @@ class WebSpider {
     }
 
     private function processPageContent($url, $htmlContent) {
-        // TODO: Implement HTML parsing using DOMDocument to extract relevant information
-        // Extract and display/log title, meta description, etc.
-        $dom = new DOMDocument;
-        @$dom->loadHTML($htmlContent);
+    // Initialize DOMDocument
+    $dom = new DOMDocument;
+    @$dom->loadHTML($htmlContent);
 
-        $title = $dom->getElementsByTagName('title')->item(0)->nodeValue;
-        $metaDescription = ''; // Extract meta description here
+    // Extract title
+    $titleNode = $dom->getElementsByTagName('title')->item(0);
+    $title = ($titleNode !== null) ? $titleNode->nodeValue : '';
 
-        return [
-            'url' => $url,
-            'title' => $title,
-            'metaDescription' => $metaDescription,
-        ];
+    // Extract meta description
+    $metaDescription = '';
+    $metaNodes = $dom->getElementsByTagName('meta');
+    foreach ($metaNodes as $metaNode) {
+        if ($metaNode->getAttribute('name') == 'description') {
+            $metaDescription = $metaNode->getAttribute('content');
+            break;
+        }
     }
+
+    // Return the extracted data
+    return [
+        'url' => $url,
+        'title' => $title,
+        'metaDescription' => $metaDescription,
+    ];
+}
+
 
     private function enqueueLinks($htmlContent) {
         // TODO: Implement URL extraction and add to the URL queue
