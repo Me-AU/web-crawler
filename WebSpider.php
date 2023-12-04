@@ -87,7 +87,6 @@ class WebSpider {
         return true; // Default to allowing the URL if there is no host or if fetching the robots.txt fails
     }
     
-
     private function fetchPageContent($url) {
         // Initialize cURL session
         $curl = curl_init();
@@ -145,7 +144,6 @@ class WebSpider {
     ];
 }
 
-
     private function enqueueLinks($htmlContent) {
     // Use DOMDocument for more robust HTML parsing
     $dom = new DOMDocument;
@@ -164,14 +162,47 @@ class WebSpider {
     }
 }
 
-    private function makeAbsoluteUrl($url) {
-        // Convert relative URLs to absolute URLs
-        // TODO: need to handle base URLs and other cases
-        // TODO: This is a simple example, enhance this logic
-        $parsedUrl = parse_url($url);
-        if (empty($parsedUrl['scheme']) || empty($parsedUrl['host'])) {
-            return null;
+    private function makeAbsoluteUrl($url, $baseUrl = null) {
+    $parsedUrl = parse_url($url);
+
+    if (empty($parsedUrl['scheme']) || empty($parsedUrl['host'])) {
+        // Handle relative URLs
+        if ($baseUrl) {
+            $parsedBaseUrl = parse_url($baseUrl);
+
+            // Ensure the base URL has a scheme and host
+            if (!empty($parsedBaseUrl['scheme']) && !empty($parsedBaseUrl['host'])) {
+                $absoluteUrl = $parsedBaseUrl['scheme'] . '://' . $parsedBaseUrl['host'];
+
+                // Handle paths and queries
+                if (!empty($parsedBaseUrl['path'])) {
+                    $absoluteUrl .= rtrim($parsedBaseUrl['path'], '/') . '/';
+                }
+
+                if (!empty($parsedBaseUrl['query'])) {
+                    $absoluteUrl .= '?' . $parsedBaseUrl['query'];
+                }
+
+                // Handle relative paths
+                if (!empty($parsedUrl['path'])) {
+                    $absoluteUrl .= ltrim($parsedUrl['path'], '/');
+                }
+
+                // Handle fragments
+                if (!empty($parsedUrl['fragment'])) {
+                    $absoluteUrl .= '#' . $parsedUrl['fragment'];
+                }
+
+                return $absoluteUrl;
+            }
         }
-        return $url;
+
+        // Unable to make an absolute URL
+        return null;
     }
+
+    // URL is already absolute
+    return $url;
+}
+
 }
