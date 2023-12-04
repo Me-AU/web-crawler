@@ -42,10 +42,51 @@ class WebSpider {
     }
 
     private function canVisitUrl($url) {
-        // TODO: Implement robots.txt compliance check here
-        // Return false if the URL is not allowed to be crawled
-        return true;
+        $parsedUrl = parse_url($url);
+    
+        if (!empty($parsedUrl['host'])) {
+            $robotsTxtUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'] . '/robots.txt';
+    
+            // Fetch and parse the robots.txt file
+            $robotsTxtContent = $this->fetchPageContent($robotsTxtUrl);
+    
+            if ($robotsTxtContent !== false) {
+                try {
+                    // Check if the user-agent is allowed to crawl the URL
+                    $userAgent = '*'; // Assume the user-agent is '*'
+    
+                    // can adjust this based on requirements
+                    if (preg_match('/User-agent: (.*)/i', $robotsTxtContent, $userAgentMatch)) {
+                        $userAgent = trim($userAgentMatch[1]);
+                    }
+    
+                    // Check if the URL is allowed for the specified user-agent
+                    if (preg_match('/Disallow: (.*)/i', $robotsTxtContent, $disallowMatch)) {
+                        $disallowedPaths = explode("\n", $disallowMatch[1]);
+                        foreach ($disallowedPaths as $disallowedPath) {
+                            $disallowedPath = trim($disallowedPath);
+                            if ($disallowedPath !== '' && strpos($parsedUrl['path'], $disallowedPath) === 0) {
+                                return false; // URL is disallowed
+                            }
+                        }
+                    }
+    
+                    return true; // Default to allowing the URL if no specific rules are found
+                } catch (Exception $e) {
+                    // Handle any exceptions that might occur during parsing
+                    // Log the error or perform additional error handling as needed
+                    error_log("Error parsing robots.txt: " . $e->getMessage());
+                    return true; // Default to allowing the URL if an error occurs
+                }
+            } else {
+                // Log or handle the case where fetching robots.txt fails
+                error_log("Error fetching robots.txt from $robotsTxtUrl");
+            }
+        }
+    
+        return true; // Default to allowing the URL if there is no host or if fetching the robots.txt fails
     }
+    
 
     private function fetchPageContent($url) {
         // TODO: Implement HTTP request to fetch the HTML content
